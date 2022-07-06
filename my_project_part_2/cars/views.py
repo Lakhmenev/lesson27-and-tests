@@ -5,9 +5,9 @@ from django.shortcuts import get_object_or_404
 
 
 # TODO ниже представлена функция, которую необходимо переписать на CBV 'CarView'
-def cars(request, id):
-    if request.method == "GET":
-        car = get_object_or_404(Car, id)
+class CarView(View):
+    def get(self, request, pk):
+        car = get_object_or_404(Car, id=pk)
 
         return JsonResponse({
             "id": car.id,
@@ -19,3 +19,4 @@ def cars(request, id):
             "status": car.status,
             "created": car.created,
         })
+
