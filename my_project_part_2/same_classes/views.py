@@ -58,17 +58,78 @@ class FeedbackEntityView(View):
 # TODO ниже следует реализовать CBV для модели Destination
 @method_decorator(csrf_exempt, name='dispatch')
 class DestinationView(View):
-    pass
+    def get(self, request):
+        destinations = Destination.objects.all()
+
+        response = []
+        for destination in destinations:
+            response.append({
+                "id": destination.id,
+                "name": destination.name,
+            })
+        return JsonResponse(response, safe=False)
+
+    def post(self, request):
+        destination_data = json.loads(request.body)
+
+        destination = Destination()
+        destination.name = destination_data["name"]
+        destination.visa_id = destination_data["visa_id"]
+        destination.covid_status = destination_data["covid_status"]
+
+        try:
+            destination.full_clean()
+        except ValidationError as e:
+            return JsonResponse(e.message_dict, status=422)
+
+        destination.save()
+        return JsonResponse({
+            "id": destination.id,
+            "name": destination.name,
+            "visa_id": destination.visa_id,
+            "covid_status": destination.covid_status,
+        })
 
 
 class DestinationEntityView(View):
-    pass
+    def get(self, request, pk):
+        destination = get_object_or_404(Destination, id=pk)
+
+        return JsonResponse({
+            "id": destination.id,
+            "name": destination.name,
+            "visa_id": destination.visa_id,
+            "covid_status": destination.covid_status,
+        })
 
 
 # TODO ниже следует реализовать generics(ListView, DetailView) CBV для модели Destination
 class DestinationListView(ListView):
-    pass
+    model = Destination
+
+    def get(self, request, *args, **kwargs):
+        super().get(request, *args, **kwargs)
+
+        response = []
+        for destination in self.object_list:
+            response.append({
+                "id": destination.id,
+                "name": destination.name,
+            })
+
+        return JsonResponse(response, safe=False)
 
 
 class DestinationDetailView(DetailView):
-    pass
+    model = Destination
+
+    def get(self, request, *args, **kwargs):
+        super().get(request, *args, **kwargs)
+        self.object = self.get_object()
+
+        return JsonResponse({
+            "id": self.object.id,
+            "name": self.object.name,
+            "visa_id": self.object.visa_id,
+            "covid_status": self.object.covid_status,
+        })
